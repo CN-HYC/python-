@@ -1,0 +1,166 @@
+#game.py
+
+
+import pygame
+from food import Food
+from gamecolor import Gamecolor
+from snake import Snake
+import sys
+
+class Game:
+    game_width=1000
+    game_height=800
+    game_backcolor=Gamecolor.white
+    game_caption="python游戏公司"
+    game_screen=None
+    game_clock=None
+    game_speed=4
+    game_food=None
+    game_snake=None
+
+    def initgame(self):
+        pygame.init()
+        pygame.display.set_caption(self.game_caption)
+        self.game_screen=pygame.display.set_mode((self.game_width,self.game_height))
+        self.game_clock=pygame.time.Clock()
+
+    def rungame(self):
+        self.game_food=Food()
+        self.game_food.block_screen=self.game_screen
+        self.game_snake=Snake(self.game_screen)
+        self.game_food.randmovefood()
+        pygame.display.update()
+        while True:
+            self.game_screen.fill(self.game_backcolor)
+            self.game_food.drawblock()
+            self.game_snake.movesnake()
+            self.iseat()
+            pygame.display.update()
+            self.game_clock.tick(self.game_speed)
+            for event in pygame.event.get():
+                if event.type==pygame.QUIT:
+                    self.gameover()
+                elif event.type==pygame.KEYDOWN:
+                    if event.key==pygame.K_ESCAPE:
+                        self.gameover()
+                    if event.key==pygame.K_LEFT:
+                        self.game_snake.snake_direction="left"
+                    if event.key==pygame.K_RIGHT:
+                        self.game_snake.snake_direction="right"
+                    if event.key==pygame.K_UP:
+                        self.game_snake.snake_direction="up"
+                    if event.key==pygame.K_DOWN:
+                        self.game_snake.snake_direction="down"
+
+    def iseat(self):
+        if self.game_snake.snake_body[0].block_x==self.game_food.block_x and self.game_snake.snake_body[0].block_y==self.game_food.block_y:
+            self.game_food.randmovefood()
+            self.game_snake.addsnakelenth()
+
+    def gameover(self):
+        pygame.quit()
+        sys.exit()
+ 
+#snake.py
+
+
+from block import Block
+
+class Snake:
+    snake_body=[]
+    snake_direction="left"
+    snake_screen=None
+
+    def __init__(self,screen):
+        self.snake_screen=screen
+        for i in range(5):
+            newblock=Block()
+            newblock.block_screen=screen
+            newblock.block_x=10+i
+            newblock.block_y=10
+            self.snake_body.append(newblock)
+
+    def movesnakebody(self):
+        for i in range(len(self.snake_body)-1,0,-1):
+            self.snake_body[i].moveblock(self.snake_body[i-1].block_x,self.snake_body[i-1].block_y)
+
+    def movesnakehead(self):
+        if self.snake_direction=="left":
+            self.snake_body[0].moveblock(self.snake_body[0].block_x-1,self.snake_body[0].block_y)
+        if self.snake_direction == "right":
+            self.snake_body[0].moveblock(self.snake_body[0].block_x +1, self.snake_body[0].block_y)
+        if self.snake_direction == "up":
+            self.snake_body[0].moveblock(self.snake_body[0].block_x , self.snake_body[0].block_y-1)
+        if self.snake_direction=="down":
+            self.snake_body[0].moveblock(self.snake_body[0].block_x,self.snake_body[0].block_y+1)
+
+    def movesnake(self):
+        self.movesnakebody()
+        self.movesnakehead()
+
+    def addsnakelenth(self):
+        newblock = Block()
+        newblock.block_screen = self.snake_screen
+        newblock.block_x = self.snake_body[0].block_x
+        newblock.block_y = self.snake_body[0].block_y
+        self.snake_body.append(newblock)
+ 
+#food.py
+
+
+from block import Block
+import random
+
+class Food(Block):
+    food_score=10
+    food_maxx=50
+    food_maxy=40
+
+    def randmovefood(self):
+        rx=random.randint(0,self.food_maxx)
+        ry=random.randint(0,self.food_maxy)
+        self.moveblock(rx,ry)
+ 
+#block.py
+
+
+import pygame
+from gamecolor import Gamecolor
+
+class Block:
+    block_size=20
+    block_color=Gamecolor.red
+    block_image=None
+    block_x=0
+    block_y=0
+    block_screen=None
+
+    def drawblock(self):
+        bx=self.block_x*self.block_size
+        by=self.block_y*self.block_size
+        blockrect=pygame.Rect(bx,by,self.block_size,self.block_size)
+        pygame.draw.rect(self.block_screen,self.block_color,blockrect)
+
+    def moveblock(self,tox,toy):
+        self.block_x=tox
+        self.block_y=toy
+        self.drawblock()
+ 
+#gamecolor.py
+
+
+class Gamecolor:
+    white = (255, 255, 255)
+    black = (0, 0, 0)
+    green = (0, 255, 0)
+    red = (255, 0, 0)
+    blue = (0, 0, 255)
+ 
+#gamemain.py
+
+
+from game import Game
+newgame=Game()
+newgame.initgame()
+newgame.rungame()
+
